@@ -1,0 +1,78 @@
+<query schema-version="1.0" lang="en" type="table" sig="zizRXD-4mt1WrU_W1-9fn-DYjiI">
+  <product program-id="ACS" dataset-id="11_5YR" table-id="S1901"/>
+  <selection>
+    <dimension type="geo" vintage="2011">
+      <cat-id>0100000US</cat-id>
+      <cat-id>0100000US.86000</cat-id>
+    </dimension>
+  </selection>
+  <data-config>
+    <axis name="H">
+      <dim-id>GEO</dim-id>
+      <dim-id>BOXHEAD</dim-id>
+      <dim-id>ESTIMATE</dim-id>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC01</cat-id>
+        <cat-id>EST</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC01</cat-id>
+        <cat-id>MOE</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC02</cat-id>
+        <cat-id>EST</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC02</cat-id>
+        <cat-id>MOE</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC03</cat-id>
+        <cat-id>EST</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC03</cat-id>
+        <cat-id>MOE</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC04</cat-id>
+        <cat-id>EST</cat-id>
+      </hide>
+      <hide>
+        <cat-id>0100000US</cat-id>
+        <cat-id>HC04</cat-id>
+        <cat-id>MOE</cat-id>
+      </hide>
+    </axis>
+    <axis name="V">
+      <dim-id>SUBJECT</dim-id>
+      <hide>
+        <cat-id>VC01</cat-id>
+      </hide>
+      <hide>
+        <cat-id>VC13</cat-id>
+      </hide>
+      <hide>
+        <cat-id>VC15</cat-id>
+      </hide>
+      <hide>
+        <cat-id>VC18</cat-id>
+      </hide>
+      <hide>
+        <cat-id>VC19</cat-id>
+      </hide>
+      <hide>
+        <cat-id>VC20</cat-id>
+      </hide>
+    </axis>
+  </data-config>
+  <table is-transposed="true"/>
+</query>
