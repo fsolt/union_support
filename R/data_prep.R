@@ -1,5 +1,4 @@
 library(tidyverse)
-library(stringr)
 library(haven)
 library(jsonlite)
 library(mi)
@@ -75,13 +74,25 @@ cces06 <- read_dta("data/cces/cces2006/cces_2006_common.dta") %>%
             prayerfreq = as.numeric(v2027),
             godimport = as.numeric(v2029))
 
-blackpct <- read_csv("data/ACS_11_5YR_%black/blackpct.csv") %>%
-  transmute(zipcode = as.numeric(str_replace(`GEO.display-label`, "^.*(\\d{5})", "\\1")),
-            blackpct_zip = as.numeric(HD01_VD03/HD01_VD01),
-            totalpop = as.numeric(HD01_VD01))
+
+acs_black_pop <- acs::acs.fetch(endyear = 2011, 
+               geography = acs::geo.make(zip.code = "*"),
+               variable = c("C02003_004"),
+               key = "")
+
+acs_total_pop <- acs::acs.fetch(endyear = 2011, 
+                                geography = acs::geo.make(zip.code = "*"),
+                                table.number = "B01003",
+                                key = "")
+
+blackpct <- acs_black_pop@geography %>% 
+    mutate(pop_black = acs_black_pop@estimate,
+           pop_total = acs_total_pop@estimate,
+           blackpct_zip = if_else(pop_total > 0, pop_black/pop_total, 0))
 
 #table scraped using http://apps.resourcegovernance.org/pdf-table-extractor/
 #These data were obtained from the Bureau of Labor Statistics (BLS) at https://www.bls.gov/news.release/archives/union2_01252007.pdf
+
 bls <- read_csv("data/scraped-data-union-state.csv") %>% 
   separate(col = V4, into = c("total_members", "percent_members", "total_rep", "percent_rep"), sep = "\\s+", convert = TRUE) %>% 
   transmute(state = str_replace_all(V1, "\\.*", "") %>% str_trim(),
@@ -227,4 +238,4 @@ format_mi_results <- function(m) {
 
 cces_merged_mi <- hhn_mi(cces_merged)
 
-save(cces_merged_mi, "~/data/cces_merged_mi.rda")
+save(cces_merged_mi, "data/cces_merged_mi.rda")
