@@ -93,7 +93,7 @@ blackpct <- acs_black_pop@geography %>%
 #table scraped using http://apps.resourcegovernance.org/pdf-table-extractor/
 #These data were obtained from the Bureau of Labor Statistics (BLS) at https://www.bls.gov/news.release/archives/union2_01252007.pdf
 
-bls <- read_csv("data/scraped-data-union-state.csv") %>% 
+bls <- read_csv("data/union2_01252007.csv") %>% 
   separate(col = V4, into = c("total_members", "percent_members", "total_rep", "percent_rep"), sep = "\\s+", convert = TRUE) %>% 
   transmute(state = str_replace_all(V1, "\\.*", "") %>% str_trim(),
             percent_members = as.numeric(percent_members)) %>% 
