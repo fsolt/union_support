@@ -87,26 +87,29 @@ acs_total_pop <- acs::acs.fetch(endyear = 2011,
                                 key = "")
 
 blackpct <- acs_black_pop@geography %>% 
-    mutate(zipcode = zipcodetabulationarea,
-           pop_black = acs_black_pop@estimate,
-           pop_total = acs_total_pop@estimate,
-           blackpct_zip = if_else(pop_total > 0, pop_black/pop_total, 0))
+    transmute(zipcode = as.numeric(zipcodetabulationarea),
+              pop_black = as.numeric(acs_black_pop@estimate),
+              pop_total = as.numeric(acs_total_pop@estimate),
+              blackpct_zip = if_else(pop_total > 0, pop_black/pop_total, 0))
 
 # These data were obtained from the Bureau of Labor Statistics (BLS) at https://www.bls.gov/news.release/archives/union2_01252007.pdf
 # Table scraped using http://apps.resourcegovernance.org/pdf-table-extractor/ and saved to data/
 # Data are at state level; the BLS does not provide estimates of union membership at the county or zip code level.
-bls <- read_csv("data/union2_01252007.csv") %>% 
-  separate(col = V4, into = c("total_members", "percent_members", "total_rep", "percent_rep"), sep = "\\s+", convert = TRUE) %>% 
-  transmute(state = str_replace_all(V1, "\\.*", "") %>% str_trim(),
-            percent_members = as.numeric(percent_members)) %>% 
-  filter(!is.na(state))
+bls <- read_csv("data/union2_01252007.csv", col_types = "ccccccc") %>% 
+    separate(col = V4, into = c("total_members", "percent_members", "total_rep", "percent_rep"), sep = "\\s+", convert = TRUE) %>% 
+    transmute(state_name = str_replace_all(V1, "\\.*", "") %>% str_trim(),
+              union_st = as.numeric(percent_members)) %>% 
+    filter(!is.na(state_name)) %>% 
+    left_join(tibble(state = state.abb, state_name = state.name), by = "state_name") %>% 
+    mutate(state = if_else(state_name=="District of Columbia", "DC", state))
 
 # Area of zip code (to calculate population density)
 area_zip <- "http://www2.census.gov/geo/docs/maps-data/data/gazetteer/2013_Gazetteer/2013_Gaz_zcta_national.zip"
 download.file(area_zip, "data/acs_zip_area.zip")
 
 acs_zip_area <- read_tsv(unz("data/acs_zip_area.zip", "2013_Gaz_zcta_national.txt")) %>% 
-  mutate(zipcode = as.numeric(stringr::str_replace(GEOID, "^.*(\\d{5})", "\\1")))
+  transmute(zipcode = as.numeric(stringr::str_replace(GEOID, "^.*(\\d{5})", "\\1")),
+            area = ALAND_SQMI)
 
 
 # Bush share of 2004 vote by county
@@ -118,7 +121,7 @@ fips_cnty$county <- tolower(gsub(" County| Parish", "", fips_cnty$county_name))
 fips_cnty$county <- gsub(" ", "", fips_cnty$county)
 
 bush04 <- read_tsv("http://bactra.org/election/vote-counts-with-NE-aggregated") %>% 
-    transmute(perc_bush04 = Bush/(Bush+Kerry+Nader),
+    transmute(bush04_county = Bush/(Bush+Kerry+Nader),
               state = State,
               county = str_replace(County %>% tolower(), " county| parish", "") %>% 
                   str_replace("saint", "st.") %>% 
@@ -158,45 +161,53 @@ for(i in 1:length(states)) {
   missing$county[missing$state==states[i]] <- lapply(missing$orig_county[missing$state==states[i]], function (ii) agrep(ii, t.rem, value=T, max.distance=.2)) # find matches to county name by state
 }
 missing$county <- unlist(lapply(missing$county, function(ii) ii[1])) # use closest match to county name
-missing <- left_join(missing, fips_cnty) %>%  # now merge; some results still without fips in Maine, otherwise good
+missing <- left_join(missing, fips_cnty, 
+                      by = c("state", "county")) %>%  # now merge; some results still without fips in Maine, otherwise good
     bind_rows(remaining %>%                   # use state-level results for Alaska
                   filter(state=="AK") %>% 
-                  left_join(missing %>% select(perc_bush04, state), by = "state"))
+                  left_join(missing %>% select(bush04_county, state), by = "state"))
 
 bush04_cnty <- bush04_cnty %>% 
-    filter(!is.na(fips)) %>% 
     bind_rows(missing) %>%
-    select(fips, perc_bush04)
+    select(fips, county, bush04_county) %>% 
+    filter(!is.na(fips))
 
-zip_fips <- jsonlite::fromJSON("https://raw.githubusercontent.com/bgruber/zip2fips/master/zip2fips.json", flatten = TRUE) %>% 
-  enframe() %>% 
-  transmute(zipcode = as.numeric(name),
-          fips = as.numeric(value))
+zip_fips <- readxl::read_excel("data/ZIP_COUNTY_032010.xlsx") %>% 
+    transmute(zipcode = as.numeric(ZIP),
+              fips = as.numeric(COUNTY))
 
-# Median income by zip code from ACS (no API, so downloaded from American FactFinder)
+# Median income and unemployment rate by zip code from ACS (no API, so downloaded from American FactFinder)
 median_income <- read_csv("data/ACS_11_5YR_S1903.csv", 
                           col_types = "ccciiii") %>%
-    transmute(zipcode = as.numeric(str_replace(`GEO.display-label`, "^.*(\\d{5})", "\\1")),
-              median_income = HC02_EST_VC02) %>%
-    filter(!is.na(zipcode))
+    transmute(zipcode = as.numeric(GEO.id2),
+              median_income_zip = HC02_EST_VC02)
+
+unemployment_rate <- read_csv("data/ACS_11_5YR_S2301.csv", 
+                              col_types = "cccdd") %>%
+    transmute(zipcode = as.numeric(GEO.id2),
+              unemployment_rate_zip = HC04_EST_VC01) 
 
 # Merge contextual variables
 cces_merged <- cces06 %>% 
+    filter(!is.na(zipcode)) %>% 
     left_join(acs_s1901, by = "zipcode") %>% 
     left_join(blackpct, by = "zipcode") %>% 
-    left_join(median_income, by = "zipcode") %>%
-    left_join(tibble(postal = state.abb, state = state.name), by = c("state_abb" = "postal")) %>% 
     left_join(bls, by = "state") %>%
     left_join(acs_zip_area, by = "zipcode") %>% 
     left_join(zip_fips, by = "zipcode") %>% 
     left_join(bush04_cnty, by = "fips") %>%
-    mutate(pop_density=totalpop/ALAND_SQMI) %>% 
+    left_join(median_income, by = "zipcode") %>%
+    left_join(unemployment_rate, by = "zipcode") %>%
+    mutate(pop_density_zip = pop_total/area) %>% 
     select(zipcode, state_abb,
            union_influence2, union_influence3, 
            below25k, above100k, 
-           median_income, unemployed, blackpct_zip, perc_bush04, pop_density, percent_members,
+           median_income_zip, unemployment_rate_zip, blackpct_zip, pop_density_zip,
+           county, fips, bush04_county,
+           union_st,
            edu, income, age, male, black, hispanic, asian, other, parttime, unemployed,
-           presentunion, pastunion, partyid, con_ideology, church_attend, south) 
+           presentunion, pastunion, partyid, con_ideology, church_attend, south) %>% 
+    filter(!is.na(below25k) & !is.na(union_influence2)) 
 
 #rachel fix this
 vars_list <- c("zipcode", "state_abb",
@@ -215,7 +226,7 @@ vars_proper <- c("Zipcode", "State",
 hhn_mi <- function(df, seed=324) {
   # multiply impute missing data
   mdf <- missing_data.frame(as.data.frame(df))
-  mdf <- change(mdf, y = c("fips", "state_abb"), what = "type", to = "irrelevant")
+  mdf <- change(mdf, y = c("fips", "state_abb", "county"), what = "type", to = "irrelevant")
   mdf <- change(mdf, y = c("income", "edu", "con_ideology"), what = "type", to = "ordered-categorical")
   mdf_mi <- mi(mdf, seed=seed) 
   
