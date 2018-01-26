@@ -46,7 +46,7 @@ cces06 <- read_dta("data/cces/cces2006/cces_2006_common.dta") %>%
   left_join(cces_combo, by = "v1000") %>%
   left_join(acs_s1901, by = "zipcode") %>%
   transmute(zipcode = zipcode,
-            state_abb = v1002,
+            state_abb = as.character(v1002),
             union_influence2 = as.numeric(v2071 == 1),
             union_influence3 = as.numeric(4 - v2071),
             age = as.numeric(2006 - v2020),
@@ -54,15 +54,15 @@ cces06 <- read_dta("data/cces/cces2006/cces_2006_common.dta") %>%
             black = as.numeric(v2005 == 2),
             hispanic = as.numeric(v2005 == 3),
             asian = as.numeric(v2005 == 4),
-            other = as.numeric(between (v2005, 5,8)),
-            hs = as.numeric(v2018 == 2 ),
+            other = as.numeric(between (v2005, 5, 8)),
+            hs = as.numeric(v2018 == 2),
             somecollege = as.numeric(v2018 == 3),
             yr2college = as.numeric(v2018 == 4),
             yr4college = as.numeric(v2018 == 5),
             postgrad = as.numeric(v2018 == 6),
-            edu = as.numeric(v2018),
+            educ = as.numeric(v2018),
             income = as.numeric(v2032),
-            unemployed = as.numeric(between(v2030, 3,4)),
+            unemployed = as.numeric(between(v2030, 3, 4)),
             parttime = as.numeric(v2030 == 2),
             presentunion = as.numeric(v2082 == 1),
             pastunion = as.numeric(v2082 == 2),
@@ -100,8 +100,8 @@ bls <- read_csv("data/union2_01252007.csv", col_types = "ccccccc") %>%
     transmute(state_name = str_replace_all(V1, "\\.*", "") %>% str_trim(),
               union_st = as.numeric(percent_members)) %>% 
     filter(!is.na(state_name)) %>% 
-    left_join(tibble(state = state.abb, state_name = state.name), by = "state_name") %>% 
-    mutate(state = if_else(state_name=="District of Columbia", "DC", state))
+    left_join(tibble(state_abb = state.abb, state_name = state.name), by = "state_name") %>% 
+    mutate(state_abb = if_else(state_name=="District of Columbia", "DC", state_abb))
 
 # Area of zip code (to calculate population density)
 area_zip <- "http://www2.census.gov/geo/docs/maps-data/data/gazetteer/2013_Gazetteer/2013_Gaz_zcta_national.zip"
@@ -114,65 +114,55 @@ acs_zip_area <- read_tsv(unz("data/acs_zip_area.zip", "2013_Gaz_zcta_national.tx
 
 # Bush share of 2004 vote by county
 fips_cnty <- read_csv("https://raw.githubusercontent.com/raypereda/fips-county-codes/master/lib/national.txt",
-                      col_types="ccccc")
-names(fips_cnty) <- tolower(gsub(" ", "_", names(fips_cnty)))
-fips_cnty$fips <- as.numeric(do.call(paste0, c(fips_cnty[, c(2,3)])))
-fips_cnty$county <- tolower(gsub(" County| Parish", "", fips_cnty$county_name))
-fips_cnty$county <- gsub(" ", "", fips_cnty$county)
+                      col_types="ccccc") %>% 
+    janitor::clean_names() %>% 
+    transmute(state = state,
+              fips = as.numeric(paste0(state_ansi, county_ansi)),
+              county = str_replace_all(county_name, "(County)|(Parish)| ", "") %>% tolower()) %>% 
+    bind_rows(tribble(~state, ~fips, ~county,  # add back discontinued fips
+                      "AK", 2280, "wrangellpetersburgcensusarea",
+                      "AK", 2201, "princeofwalesouterketchikancensusarea"))
 
-bush04 <- read_tsv("http://bactra.org/election/vote-counts-with-NE-aggregated") %>% 
-    transmute(bush04_county = Bush/(Bush+Kerry+Nader),
+bush04 <- read_tsv("http://bactra.org/election/vote-counts-with-NE-aggregated",
+                   col_types = "cciiiii") %>% 
+    mutate(County = if_else(State == "ME",    # fix Maine counties that are disaggregated
+                            str_extract(County, "^[^-]*"),
+                            County)) %>% 
+    group_by(State, County) %>% 
+    summarise(bush = sum(Bush),
+              kerry = sum(Kerry),
+              nader = sum(Nader)) %>% 
+    ungroup() %>% 
+    transmute(bush04_county = bush/(bush+kerry+nader),
               state = State,
               county = str_replace(County %>% tolower(), " county| parish", "") %>% 
                   str_replace("saint", "st.") %>% 
                   str_replace_all(" ", ""))
-bush04$county[(bush04$state=="LA"|bush04$state=="MS") & bush04$county=="jeffdavis"] <- "jeffersondavis"
-bush04$county[(bush04$state=="ME") & bush04$county=="linc"] <- "lincoln"
-bush04$county[(bush04$state=="ME") & bush04$county=="andr"] <- "androscoggin"
-bush04$county[(bush04$state=="ME") & bush04$county=="pen-s"] <- "penobscot"
-bush04$county[(bush04$state=="ME") & bush04$county=="som-s"] <- "somerset"
-bush04$county[(bush04$state=="ME") & bush04$county=="oxf-s"] <- "oxford"
-bush04$county[(bush04$state=="MA") & bush04$county=="hamd"] <- "hamden"
-bush04$county[(bush04$state=="MA") & bush04$county=="esse"] <- "essex"
-bush04$county[(bush04$state=="MA") & bush04$county=="hams"] <- "hampshire"
-bush04$county[(bush04$state=="NH") & bush04$county=="graf"] <- "grafton"
-bush04$county[(bush04$state=="NY") & bush04$county=="manhattan"] <- "newyork"
-bush04$county[(bush04$state=="NY") & bush04$county=="statenisland"] <- "richmond"
-bush04$county[(bush04$state=="NY") & bush04$county=="brooklyn"] <- "kings"
-bush04$county[(bush04$state=="VT") & bush04$county=="fran"] <- "franklin"
-bush04$county[(bush04$state=="VT") & bush04$county=="wins"] <- "windsor"
-bush04$county[(bush04$state=="VT") & bush04$county=="addi"] <- "addison"
-bush04$county[(bush04$state=="VT") & bush04$county=="gris"] <- "grandisle"
-bush04$county[(bush04$state=="VT") & bush04$county=="oran"] <- "orange"
-bush04$county[(bush04$state=="VA") & bush04$county=="manassas"] <- "manassascity"
-bush04$county[(bush04$state=="VA") & bush04$county=="norton"] <- "nortoncity"
+
 bush04_cnty <- left_join(bush04, fips_cnty, by = c("state", "county"))
 
 missing <- bush04_cnty %>%  # election results still without fips due to county name inconsistencies
     filter(is.na(fips)) %>% 
-    mutate(orig_county = county)
-remaining <- anti_join(fips_cnty, bush04, by = c("state", "county")) %>% # fips without election results
-    arrange(state) 
-
-states <- unique(missing$state)
-states <- states[states != "AK"] # nothing to be done with Alaska election results--no breakdown in data
-for(i in 1:length(states)) {
-  t.rem <- remaining$county[remaining$state==states[i]] # fips without election results, one state at a time
-  missing$county[missing$state==states[i]] <- lapply(missing$orig_county[missing$state==states[i]], function (ii) agrep(ii, t.rem, value=T, max.distance=.2)) # find matches to county name by state
-}
-missing$county <- unlist(lapply(missing$county, function(ii) ii[1])) # use closest match to county name
-missing <- left_join(missing, fips_cnty, 
-                      by = c("state", "county")) %>%  # now merge; some results still without fips in Maine, otherwise good
-    bind_rows(remaining %>%                   # use state-level results for Alaska
-                  filter(state=="AK") %>% 
-                  left_join(missing %>% select(bush04_county, state), by = "state"))
+    rename(orig_county = county) %>% 
+    left_join(read_csv("data/county_crosswalk.csv", col_types = "ccc"), by = c("state", "orig_county")) %>% 
+    bind_rows(anti_join(fips_cnty, bush04, by = c("state", "county")) %>% # use state-level results for Alaska
+                  filter(state=="AK") %>%
+                  left_join(bush04 %>% select(bush04_county, state), by = "state")) %>% 
+    filter(!is.na(county)) %>% 
+    select(bush04_county, state, county) %>% 
+    left_join(fips_cnty, by = c("state", "county"))
 
 bush04_cnty <- bush04_cnty %>% 
     bind_rows(missing) %>%
-    select(fips, county, bush04_county) %>% 
+    select(fips, state, county, bush04_county) %>% 
     filter(!is.na(fips))
 
+# zip to county fips crosswalk from Dept of Housing and Urban Development
+# <https://www.huduser.gov/portal/datasets/usps_crosswalk.html>
 zip_fips <- readxl::read_excel("data/ZIP_COUNTY_032010.xlsx") %>% 
+    group_by(ZIP) %>% 
+    filter(TOT_RATIO == max(TOT_RATIO)) %>%
+    ungroup() %>% 
     transmute(zipcode = as.numeric(ZIP),
               fips = as.numeric(COUNTY))
 
@@ -192,7 +182,7 @@ cces_merged <- cces06 %>%
     filter(!is.na(zipcode)) %>% 
     left_join(acs_s1901, by = "zipcode") %>% 
     left_join(blackpct, by = "zipcode") %>% 
-    left_join(bls, by = "state") %>%
+    left_join(bls, by = "state_abb") %>%
     left_join(acs_zip_area, by = "zipcode") %>% 
     left_join(zip_fips, by = "zipcode") %>% 
     left_join(bush04_cnty, by = "fips") %>%
@@ -205,9 +195,9 @@ cces_merged <- cces06 %>%
            median_income_zip, unemployment_rate_zip, blackpct_zip, pop_density_zip,
            county, fips, bush04_county,
            union_st,
-           edu, income, age, male, black, hispanic, asian, other, parttime, unemployed,
+           educ, income, age, male, black, hispanic, asian, other, parttime, unemployed,
            presentunion, pastunion, partyid, con_ideology, church_attend, south) %>% 
-    filter(!is.na(below25k) & !is.na(union_influence2)) 
+    filter(!is.na(union_influence2) & !is.na(fips) & !is.na(median_income_zip)) # exclude PO-box-only zips with no populations
 
 #rachel fix this
 vars_list <- c("zipcode", "state_abb",
