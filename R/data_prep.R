@@ -2,6 +2,7 @@ library(tidyverse)
 library(haven)
 library(jsonlite)
 library(mi)
+library(mitools)
 
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
@@ -218,7 +219,7 @@ hhn_mi <- function(df, seed=324) {
   mdf_mi_list <- lapply(mdf_mi_list, function(df) 
     sapply(df, function(v) 
       if(any(class(v)=="factor")) v <- as.numeric(levels(v))[v] else v <- v) %>% data.frame) # get rid of %&*(&^ factors
-  imputationList(mdf_mi_list)
+  mitools::imputationList(mdf_mi_list)
 }
 
 # this right here, we'll have to come back to
