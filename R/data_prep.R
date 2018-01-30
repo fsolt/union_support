@@ -191,7 +191,7 @@ cces_merged <- cces06 %>%
            union_st,
            educ, income, age, male, black, hispanic, asian, other, parttime, unemployed,
            presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
-    filter(!is.na(union_influence2) & !is.na(fips) & !is.na(median_income_zip)) # exclude PO-box-only zips with no populations
+    filter(!is.na(union_influence2)) # exclude obs with missing DV
 
 #rachel fix this
 vars_list <- c("zipcode", "state_abb",
