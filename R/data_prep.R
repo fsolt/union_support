@@ -49,30 +49,22 @@ cces06 <- read_dta("data/cces/cces2006/cces_2006_common.dta") %>%
             state_abb = as.character(v1002),
             union_influence2 = as.numeric(v2071 == 1),
             union_influence3 = as.numeric(4 - v2071),
+            educ = as.numeric(v2018),
+            income = as.numeric(v2032),
             age = as.numeric(2006 - v2020),
             male = as.numeric(2 - v2004),
             black = as.numeric(v2005 == 2),
             hispanic = as.numeric(v2005 == 3),
             asian = as.numeric(v2005 == 4),
-            other = as.numeric(between (v2005, 5, 8)),
-            hs = as.numeric(v2018 == 2),
-            somecollege = as.numeric(v2018 == 3),
-            yr2college = as.numeric(v2018 == 4),
-            yr4college = as.numeric(v2018 == 5),
-            postgrad = as.numeric(v2018 == 6),
-            educ = as.numeric(v2018),
-            income = as.numeric(v2032),
-            unemployed = as.numeric(between(v2030, 3, 4)),
+            other = as.numeric(between(as.numeric(v2005), 5, 8)),
             parttime = as.numeric(v2030 == 2),
+            unemployed = as.numeric(between(as.numeric(v2030), 3, 4)),
             presentunion = as.numeric(v2082 == 1),
             pastunion = as.numeric(v2082 == 2),
-            south = as.numeric(v1006 == 3),
-            partyid = as.numeric(v3005),
+            rep_partyid = as.numeric(v3005),
             con_ideology = as.numeric(v3007),
-            religiosity = as.numeric(v2026+v2027+v2029),
             church_attend = if_else(v2026 == 5, NA_integer_, as.integer(5-v2026)),
-            prayerfreq = as.numeric(v2027),
-            godimport = as.numeric(v2029))
+            south = as.numeric(v1006 == 3))
 
 
 # African-American population pecentage by zip code from ACS
@@ -188,15 +180,16 @@ cces_merged <- cces06 %>%
     left_join(bush04_cnty, by = "fips") %>%
     left_join(median_income, by = "zipcode") %>%
     left_join(unemployment_rate, by = "zipcode") %>%
-    mutate(pop_density_zip = pop_total/area) %>% 
-    select(zipcode, state_abb,
+    mutate(pop_density_zip = pop_total/area,
+           state_alph = as.numeric(as.factor(state_abb))) %>% # by postcode, not name
+    select(zipcode, state_alph,
            union_influence2, union_influence3, 
            below25k, above100k, 
            median_income_zip, unemployment_rate_zip, blackpct_zip, pop_density_zip,
-           county, fips, bush04_county,
+           fips, bush04_county,
            union_st,
            educ, income, age, male, black, hispanic, asian, other, parttime, unemployed,
-           presentunion, pastunion, partyid, con_ideology, church_attend, south) %>% 
+           presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
     filter(!is.na(union_influence2) & !is.na(fips) & !is.na(median_income_zip)) # exclude PO-box-only zips with no populations
 
 #rachel fix this
@@ -216,7 +209,7 @@ vars_proper <- c("Zipcode", "State",
 hhn_mi <- function(df, seed=324) {
   # multiply impute missing data
   mdf <- missing_data.frame(as.data.frame(df))
-  mdf <- change(mdf, y = c("fips", "state_abb", "county"), what = "type", to = "irrelevant")
+  mdf <- change(mdf, y = c("zipcode", "fips", "state_alph"), what = "type", to = "irrelevant")
   mdf <- change(mdf, y = c("income", "edu", "con_ideology"), what = "type", to = "ordered-categorical")
   mdf_mi <- mi(mdf, seed=seed) 
   
