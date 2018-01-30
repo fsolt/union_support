@@ -242,4 +242,4 @@ format_mi_results <- function(m) {
 
 cces_merged_mi <- hhn_mi(cces_merged)
 
-save(cces_merged_mi, "data/cces_merged_mi.rda")
+save(cces_merged_mi, file = "data/cces_merged_mi.rda")
