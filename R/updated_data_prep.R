@@ -4,7 +4,6 @@ library(jsonlite)
 library(mi)
 library(mitools)
 library(lme4)
-library(repmis)
 
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
@@ -240,23 +239,20 @@ cces_merged_mi <- hhn_mi(cces_merged)
 
 save(cces_merged_mi, "data/cces_merged_mi.rda")
 
-source_data("https://github.com/fsolt/union_support/blob/master/data/cces_merged_mi.rda?raw=True")
+load("data/cces_merged_mi.rda")
+
 
 #this line estimates the model on each of those 10 datasets and combine the results 
 #taking into account our uncertainty of the missing values of our data
 #model_1 <- with(cces_merged_mi, 
 
 #Union_Influence2
-tempModel1 <- glmer(formula = union_influence2~below25k*above100k+
-        median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
-        educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
-          rep_partyid+con_ideology+church_attend+south
-      + (1|fips), family=binomial(link="logit"), data = cces_merged_mi$imputations[[1]])
-#Union_Influence3
-tempModel2 <- glmer(formula = union_influence3~below25k*above100k+
-        median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
-        educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
-        rep_partyid+con_ideology+church_attend+south
-      + (1|fips), family=binomial(link="logit"), data = cces_merged_mi$imputations[[1]])
+m1 <- with(cces_merged_mi,
+                   glmer(union_influence2~below25k*above100k+
+                             median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
+                             educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
+                             rep_partyid+con_ideology+church_attend+south+
+                             (1|fips), family=binomial(link="logit")))
 
-#t2_all_res <- format_mi_results(t2_all)
+m1_all_res <- format_mi_results(t2_all)
+
