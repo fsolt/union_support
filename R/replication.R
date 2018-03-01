@@ -4,7 +4,8 @@ library(jsonlite)
 library(mi)
 library(mitools)
 library(lme4)
-
+library(acs)
+library(janitor)
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
                       col_types = cols(.default = col_double(),
@@ -12,7 +13,7 @@ acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                                        `Geography` = col_character())) %>%
   select(Id, Id2, Geography, starts_with("Households")) %>%
   filter(!is.na(Id2)) %>%
-  transmute(zipcode = Id2,
+  transmute(zipcode = as.numeric(Id2),
             below25k = `Households; Estimate; Less than $10,000` +
               `Households; Estimate; $10,000 to $14,999` +
               `Households; Estimate; $15,000 to $24,999`,
@@ -35,32 +36,35 @@ acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
 # Postscript: It turns out that zip_post is all missing for 2006 in cces_common_cumulative.dta anyway.
 
 cces_combo <- read_dta("data/cces/cces_cumulative_0612/cces_common_cumulative_4.dta") %>%
-  filter(year == 2006) %>%
+  filter(year == 2007) %>%
   transmute(v1000 = caseid,
-            zipcode = as.numeric(zip_pre))
+            zipcode = as.numeric(zip_pre)) %>%
+  left_join(acs_s1901, by = "zipcode")
+
 
 cces07 <- read_dta("data/cces/cces2007/cces07_output.dta") %>% # haven says .sav has 'invalid byte sequence', so first converted to .dta with StatTransfer
-  left_join(acs_s1901, by = "zipcode") %>%
-  transmute(zipcode = zipcode,
-            state_abb = as.character(v1002),
-            union_influence2 = as.numeric(v2071 == 1),
-            union_influence3 = as.numeric(4 - v2071),
-            educ = as.numeric(v2018),
-            income = as.numeric(v2032),
-            age = as.numeric(2006 - v2020),
-            male = as.numeric(2 - v2004),
-            black = as.numeric(v2005 == 2),
-            hispanic = as.numeric(v2005 == 3),
-            asian = as.numeric(v2005 == 4),
-            other = as.numeric(between(as.numeric(v2005), 5, 8)),
-            parttime = as.numeric(v2030 == 2),
-            unemployed = as.numeric(between(as.numeric(v2030), 3, 4)),
-            presentunion = as.numeric(v2082 == 1),
-            pastunion = as.numeric(v2082 == 2),
-            rep_partyid = as.numeric(v3005),
-            con_ideology = as.numeric(v3007),
-            church_attend = if_else(v2026 == 5, NA_integer_, as.integer(5-v2026)),
-            south = as.numeric(v1006 == 3))
+  transmute(zipcode = as.numeric(inputzip),
+            state_abb = as.character(cc06_v1002),
+            union_influence2 = as.numeric(cc06_v2071 == 1),
+            union_influence3 = as.numeric(4 - cc06_v2071),
+            educ = as.numeric(cc06_v2018),
+            income = as.numeric(cc06_v2032),
+            age = as.numeric(2007 - cc06_v2020),
+            male = as.numeric(2 - cc06_v2004),
+            black = as.numeric(race == 2),
+            hispanic = as.numeric(race == 3),
+            asian = as.numeric(race == 4),
+            other = as.numeric(between(as.numeric(race), 5, 8)),
+            parttime = as.numeric(cc06_v2030 == 2),
+            unemployed = as.numeric(between(as.numeric(cc06_v2030), 3, 4)),
+            presentunion = as.numeric(cc06_v2082 == 1),
+            pastunion = as.numeric(cc06_v2082 == 2),
+            rep_partyid = cc06_v3005,
+            con_ideology =ideo5,
+            church_attend = churatd,
+            south = as.numeric(cc06_v1006  == 3)) %>%
+            left_join(acs_s1901, by = "zipcode")
+  
 
 # African-American population pecentage by zip code from ACS
 acs_black_pop <- acs::acs.fetch(endyear = 2011, 
