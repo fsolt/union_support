@@ -6,6 +6,7 @@ library(mitools)
 library(lme4)
 library(acs)
 library(janitor)
+
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
                       col_types = cols(.default = col_double(),
@@ -59,11 +60,10 @@ cces07 <- read_dta("data/cces/cces2007/cces07_output.dta") %>% # haven says .sav
             unemployed = as.numeric(between(as.numeric(cc06_v2030), 3, 4)),
             presentunion = as.numeric(cc06_v2082 == 1),
             pastunion = as.numeric(cc06_v2082 == 2),
-            rep_partyid = cc06_v3005,
-            con_ideology =ideo5,
-            church_attend = churatd,
-            south = as.numeric(cc06_v1006  == 3)) %>%
-            left_join(acs_s1901, by = "zipcode")
+            rep_partyid = as.numeric(cc06_v3005),
+            con_ideology = as.numeric(ideo5),
+            church_attend = if_else(churatd == 5, NA_integer_, as.integer(5-churatd)),
+            south = as.numeric(cc06_v1006  == 3))
   
 
 # African-American population pecentage by zip code from ACS
@@ -169,7 +169,7 @@ unemployment_rate <- read_csv("data/ACS_11_5YR_S2301.csv",
             unemployment_rate_zip = HC04_EST_VC01) 
 
 # Merge contextual variables
-cces_merged <- cces07 %>% 
+cces07_merged <- cces07 %>% 
   filter(!is.na(zipcode)) %>% 
   left_join(acs_s1901, by = "zipcode") %>% 
   left_join(blackpct, by = "zipcode") %>% 
@@ -204,7 +204,7 @@ vars_proper <- c("Zipcode", "State",
                  "Education", "Income", "Age", "Male", "Black", "Hispanic", "Asian", "Other", "Employed Part-Time", "Unemployed",
                  "Current Union Member", "Past Union Member", "Party ID", "Ideology", "Religiosity", "South")
 
-hhn_mi <- function(df, seed=324) {
+multiply_impute <- function(df, seed=324) {
   # multiply impute missing data
   mdf <- missing_data.frame(as.data.frame(df))
   mdf <- change(mdf, y = c("zipcode", "fips", "state_alph"), what = "type", to = "irrelevant")
@@ -219,7 +219,6 @@ hhn_mi <- function(df, seed=324) {
   imputationList(mdf_mi_list)
 }
 
-# this right here, we'll have to come back to
 format_mi_results <- function(m) {
   # format results of analysis of multiply imputed dataset
   m_fe <- MIextract(m, fun=fixef) # see https://books.google.com/books?id=EbLrQrBGid8C&pg=PA384
@@ -237,11 +236,11 @@ format_mi_results <- function(m) {
   df %>% filter(term!="(Intercept)")
 }
 
-cces_merged_mi_2 <- hhn_mi(cces_merged)
+cces07_merged_mi <- multiply_impute(cces07_merged)
 
-save(cces_merged_mi_2, "data/cces_merged_mi_2.rda")
+save(cces07_merged_mi, file = "data/cces07_merged_mi.rda")
 
-load("data/cces_merged_mi_2.rda")
+load("data/cces07_merged_mi.rda")
 
 
 #this line estimates the model on each of those 10 datasets and combine the results 
