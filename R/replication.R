@@ -155,7 +155,40 @@ zip_fips <- readxl::read_excel("data/ZIP_COUNTY_032010.xlsx") %>%
   filter(TOT_RATIO == max(TOT_RATIO)) %>%
   ungroup() %>% 
   transmute(zipcode = as.numeric(ZIP),
-            fips = as.numeric(COUNTY))
+            fips = as.numeric(COUNTY)) %>% 
+    bind_rows(tribble(
+        ~zipcode, ~fips,
+        5486, 50013,
+        6520, 9009,
+        27619, 37183,
+        28680, 37023,
+        29151, 45085,
+        33970, 12071,
+        36616, 1097,
+        51502, 19155,
+        54602, 55063,
+        70064, 22051,
+        72630, 5009,
+        77342, 48471,
+        81157, 8007,
+        82602, 56025,
+        85038, 4013,
+        85218, 4021,
+        85220, 4021,
+        85222, 4021,
+        85242, 4013,
+        86339, 4005,
+        88311, 35035,
+        89803, 32007,
+        92030, 6073,
+        92190, 6073,
+        92275, 6025,
+        93921, 6053,
+        95853, 6067,
+        96788, 15009,
+        98111, 53033,
+        99687, 2170
+    ))
 
 # Median income and unemployment rate by zip code from ACS (no API, so downloaded from American FactFinder)
 median_income <- read_csv("data/ACS_11_5YR_S1903.csv", 
@@ -189,7 +222,7 @@ cces07_merged <- cces07 %>%
          union_st,
          educ, income, age, male, black, hispanic, asian, other, parttime, unemployed,
          presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
-  filter(!is.na(union_influence2)) # exclude individuals with no DV response
+  filter(!is.na(union_influence2) & !is.na(blackpct_zip) & !is.na(bush04_county)) # exclude individuals with no DV response
 
 vars_list <- c("zipcode", "state_abb",
                "union_influence2", "union_influence3", 
@@ -248,21 +281,21 @@ load("data/cces07_merged_mi.rda")
 #model_1 <- with(cces_merged_mi, 
 
 #Union_Influence2
-m1 <- with(cces_merged_mi_2,
+m1_all <- with(cces07_merged_mi,
            glmer(union_influence2~below25k*above100k+
                    median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
                    educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
                    rep_partyid+con_ideology+church_attend+south+
                    (1|fips), family=binomial(link="logit")))
 
-m1_all_res <- format_mi_results(t2_all)
+m1_all_res <- format_mi_results(m1_all)
 
 #Union_Influence3
-m2 <- with(cces_merged_mi_2,
+m2_all <- with(cces07_merged_mi,
            glmer(union_influence3~below25k*above100k+
                    median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
                    educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
                    rep_partyid+con_ideology+church_attend+south+
                    (1|fips), family=binomial(link="logit")))
 
-m2_all_res <- format_mi_results(t2_all)
+m2_all_res <- format_mi_results(m2_all)
