@@ -244,15 +244,60 @@ load("data/cces_merged_mi.rda")
 
 #this line estimates the model on each of those 10 datasets and combine the results 
 #taking into account our uncertainty of the missing values of our data
-#model_1 <- with(cces_merged_mi, 
 
 #Union_Influence2
-m1 <- with(cces_merged_mi,
-                   glmer(union_influence2~below25k*above100k+
-                             median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
+m06 <- with(cces_merged_mi,
+                   glmer(union_influence2 ~ below25k*above100k+
+                             median_income_zip+unemployment_rate_zip+blackpct_zip+bush04_county+pop_density_zip+union_st+
                              educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
                              rep_partyid+con_ideology+church_attend+south+
                              (1|fips), family=binomial(link="logit")))
 
-m1_all_res <- format_mi_results(t2_all)
+m06_res <- format_mi_results(m1_all)
+
+save(m06, m06_res, file = "data/results06.rda")
+
+p <- #t2_res %>% by_2sd(hhn06x) %>%
+    #rbind(t2_all_res %>% by_2sd(hhn)) %>% 
+    m06_res %>% by_2sd(cces_merged_mi[[1]]) %>% 
+    dwplot() +
+    # relabel_y_axis(vars_proper) +
+    theme_bw() + xlab("Coefficient Estimate") +
+    geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
+    theme(legend.justification=c(0, 1), legend.position=c(0, 1),
+          legend.background = element_rect(colour="grey80"),
+          legend.title.align = .5,
+          legend.text = element_text(size = 9),
+          legend.key.height = unit(12, "pt")) # +
+    # scale_colour_grey(start = .7, end = .5,
+    #                   name = "Data",
+    #                   breaks = c("t2", "t2_all"),
+    #                   labels = c("Pew 2006", "Pew 2005-2009"))
+# g <- p %>% add_brackets(level_brackets)
+# dir.create("figures", showWarnings = FALSE)
+# ggsave("figures/t2_pooled.pdf", plot = g, width = 6, height = 5) 
+
+
+
+m1_inter_below25k <- interplot(m06, "below25k", "above100k") +
+    labs(x = "Above $100K", 
+         y = "Coefficient of Below $25K") +
+    theme_bw() +
+    theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8),
+          axis.title.y = element_text(size=8)) +
+    geom_hline(yintercept = 0, colour = "grey80", linetype = "dashed") +
+    scale_colour_grey(start = .5)
+
+ggsave(filename="paper/figures/m1_inter_below25k.pdf", plot = m1_inter_below25k, width = 7, height = 7)
+
+m1_inter_above100k <- interplot(m06, "above100k", "below25k") +
+    labs(x = "Below $25K", 
+         y = "Coefficient of Above $100K") +
+    theme_bw() +
+    theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8),
+          axis.title.y = element_text(size=8)) +
+    geom_hline(yintercept = 0, colour = "grey80", linetype = "dashed") +
+    scale_colour_grey(start = .5)
+
+ggsave(filename="paper/figures/m1_inter_above100k.pdf", plot = m1_inter_above100k, width = 7, height = 7)
 
