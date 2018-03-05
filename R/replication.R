@@ -1,3 +1,4 @@
+library(interplot)
 library(tidyverse)
 library(haven)
 library(jsonlite)
@@ -231,7 +232,7 @@ vars_list <- c("zipcode", "state_abb",
                "edu", "income", "age", "male", "black", "hispanic", "asian", "other", "parttime", "unemployed",
                "presentunion", "pastunion", "partyid", "con_ideology", "church_attend", "south")
 vars_proper <- c("Zipcode", "State", 
-                 "Union Influence 1", "Union Influence 2", 
+                 "Union Influence", "Union Influence", 
                  "Below 25k", "Above 100k", 
                  "Median Income", "Unemployment Rate", "% Black", "% Republican Vote", "Population Density", "% Unionized Workers", 
                  "Education", "Income", "Age", "Male", "Black", "Hispanic", "Asian", "Other", "Employed Part-Time", "Unemployed",
@@ -276,26 +277,40 @@ save(cces07_merged_mi, file = "data/cces07_merged_mi.rda")
 load("data/cces07_merged_mi.rda")
 
 
-#this line estimates the model on each of those 10 datasets and combine the results 
-#taking into account our uncertainty of the missing values of our data
-#model_1 <- with(cces_merged_mi, 
+# estimates the model on each of those 10 datasets and combine the results 
+# and so take into account our uncertainty in the missing values of our data
 
-#Union_Influence2
-m1_all <- with(cces07_merged_mi,
+m07 <- with(cces07_merged_mi,
            glmer(union_influence2~below25k*above100k+
                    median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
                    educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
                    rep_partyid+con_ideology+church_attend+south+
                    (1|fips), family=binomial(link="logit")))
 
-m1_all_res <- format_mi_results(m1_all)
+m07_res <- format_mi_results(m1_all)
 
-#Union_Influence3
-m2_all <- with(cces07_merged_mi,
-           glmer(union_influence3~below25k*above100k+
-                   median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
-                   educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
-                   rep_partyid+con_ideology+church_attend+south+
-                   (1|fips), family=binomial(link="logit")))
+save(m07, m07_res, file = "data/results07.rda")
 
-m2_all_res <- format_mi_results(m2_all)
+m07_inter_below25k <- interplot(m07, "below25k", "above100k") +
+    labs(x = "Above $100K", 
+         y = "Coefficient of Below $25K") +
+    theme_bw() +
+    theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8),
+          axis.title.y = element_text(size=8)) +
+    geom_hline(yintercept = 0, colour = "grey80", linetype = "dashed") +
+    scale_colour_grey(start = .5)
+
+ggsave(filename="paper/figures/m07_inter_below25k.pdf", plot = m07_inter_below25k, width = 7, height = 7)
+
+m07_inter_above100k <- interplot(m07, "above100k", "below25k") +
+    labs(x = "Below $25K", 
+         y = "Coefficient of Above $100K") +
+    theme_bw() +
+    theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8),
+          axis.title.y = element_text(size=8)) +
+    geom_hline(yintercept = 0, colour = "grey80", linetype = "dashed") +
+    scale_colour_grey(start = .5)
+
+ggsave(filename="paper/figures/m07_inter_above100k.pdf", plot = m07_inter_above100k, width = 7, height = 7)
+
+
