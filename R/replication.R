@@ -1,4 +1,5 @@
 library(interplot)
+library(dotwhisker)
 library(tidyverse)
 library(haven)
 library(jsonlite)
@@ -313,4 +314,22 @@ m07_inter_above100k <- interplot(m07, "above100k", "below25k") +
 
 ggsave(filename="paper/figures/m07_inter_above100k.pdf", plot = m07_inter_above100k, width = 7, height = 7)
 
-
+p <- #t2_res %>% by_2sd(hhn06x) %>%
+    #rbind(t2_all_res %>% by_2sd(hhn)) %>% 
+    m07_res %>% by_2sd(cces07_merged_mi[[1]]) %>% 
+    dwplot() +
+    # relabel_y_axis(vars_proper) +
+    theme_bw() + xlab("Coefficient Estimate") +
+    geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
+    theme(legend.justification=c(0, 1), legend.position=c(0, 1),
+          legend.background = element_rect(colour="grey80"),
+          legend.title.align = .5,
+          legend.text = element_text(size = 9),
+          legend.key.height = unit(12, "pt")) # +
+# scale_colour_grey(start = .7, end = .5,
+#                   name = "Data",
+#                   breaks = c("t2", "t2_all"),
+#                   labels = c("Pew 2006", "Pew 2005-2009"))
+# g <- p %>% add_brackets(level_brackets)
+# dir.create("figures", showWarnings = FALSE)
+# ggsave("figures/t2_pooled.pdf", plot = g, width = 6, height = 5) 
