@@ -1,9 +1,11 @@
-library(tidyverse)
 library(haven)
 library(jsonlite)
 library(mi)
 library(mitools)
 library(lme4)
+library(interplot)
+library(tidyverse)
+
 
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
@@ -253,9 +255,11 @@ m06 <- with(cces_merged_mi,
                              rep_partyid+con_ideology+church_attend+south+
                              (1|fips), family=binomial(link="logit")))
 
-m06_res <- format_mi_results(m1_all)
+m06_res <- format_mi_results(m06)
 
 save(m06, m06_res, file = "data/results06.rda")
+
+load("data/results06.rda")
 
 p <- #t2_res %>% by_2sd(hhn06x) %>%
     #rbind(t2_all_res %>% by_2sd(hhn)) %>% 
@@ -279,7 +283,7 @@ p <- #t2_res %>% by_2sd(hhn06x) %>%
 
 
 
-m1_inter_below25k <- interplot(m06, "below25k", "above100k") +
+m06_inter_below25k <- interplot(m06, "below25k", "above100k") +
     labs(x = "Above $100K", 
          y = "Coefficient of Below $25K") +
     theme_bw() +
@@ -288,9 +292,9 @@ m1_inter_below25k <- interplot(m06, "below25k", "above100k") +
     geom_hline(yintercept = 0, colour = "grey80", linetype = "dashed") +
     scale_colour_grey(start = .5)
 
-ggsave(filename="paper/figures/m1_inter_below25k.pdf", plot = m1_inter_below25k, width = 7, height = 7)
+ggsave(filename="paper/figures/m06_inter_below25k.pdf", plot = m06_inter_below25k, width = 7, height = 7)
 
-m1_inter_above100k <- interplot(m06, "above100k", "below25k") +
+m06_inter_above100k <- interplot(m06, "above100k", "below25k") +
     labs(x = "Below $25K", 
          y = "Coefficient of Above $100K") +
     theme_bw() +
@@ -299,5 +303,5 @@ m1_inter_above100k <- interplot(m06, "above100k", "below25k") +
     geom_hline(yintercept = 0, colour = "grey80", linetype = "dashed") +
     scale_colour_grey(start = .5)
 
-ggsave(filename="paper/figures/m1_inter_above100k.pdf", plot = m1_inter_above100k, width = 7, height = 7)
+ggsave(filename="paper/figures/m06_inter_above100k.pdf", plot = m06_inter_above100k, width = 7, height = 7)
 
