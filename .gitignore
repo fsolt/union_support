@@ -4,3 +4,8 @@
 .Ruserdata
 # data/results06.rda too big for GitHub
 data/results06.rda
+data/cces/cces_cumulative_0612
+data/cces/cces200*
+data/pew_hhn
+lit
+notes.txt
