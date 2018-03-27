@@ -45,28 +45,28 @@ cces_combo <- read_dta("data/cces/cces_cumulative_0612/cces_common_cumulative_4.
   left_join(acs_s1901, by = "zipcode")
 
 
-cces07 <- read_dta("data/cces/cces2007/cces07_output.dta") %>% # haven says .sav has 'invalid byte sequence', so first converted to .dta with StatTransfer
-  transmute(zipcode = as.numeric(inputzip),
-            state_abb = as.character(cc06_v1002),
-            union_influence2 = as.numeric(cc06_v2071 == 1),
-            union_influence3 = as.numeric(4 - cc06_v2071),
-            educ = as.numeric(cc06_v2018),
-            income = as.numeric(cc06_v2032),
-            age = as.numeric(2007 - cc06_v2020),
-            male = as.numeric(2 - cc06_v2004),
-            black = as.numeric(race == 2),
-            hispanic = as.numeric(race == 3),
-            asian = as.numeric(race == 4),
-            other = as.numeric(between(as.numeric(race), 5, 8)),
-            parttime = as.numeric(cc06_v2030 == 2),
-            unemployed = as.numeric(between(as.numeric(cc06_v2030), 3, 4)),
-            presentunion = as.numeric(cc06_v2082 == 1),
-            pastunion = as.numeric(cc06_v2082 == 2),
-            rep_partyid = as.numeric(cc06_v3005),
-            con_ideology = as.numeric(ideo5),
-            church_attend = if_else(churatd == 5, NA_integer_, as.integer(5-churatd)),
-            south = as.numeric(cc06_v1006  == 3))
-  
+cces07 <- read_dta("data/cces/cces2007/cces07_output.dta", encoding = "latin1") %>% # haven says .sav has 'invalid byte sequence', so first converted to .dta with StatTransfer
+    transmute(zipcode = as.numeric(inputzip),
+              state_abb = as.character(cc06_v1002),
+              union_influence2 = as.numeric(cc06_v2071 == 1),
+              union_influence3 = as.numeric(4 - cc06_v2071),
+              educ = as.numeric(cc06_v2018),
+              income = as.numeric(cc06_v2032),
+              age = as.numeric(2007 - cc06_v2020),
+              male = as.numeric(2 - cc06_v2004),
+              black = as.numeric(race == 2),
+              hispanic = as.numeric(race == 3),
+              asian = as.numeric(race == 4),
+              other = as.numeric(between(as.numeric(race), 5, 8)),
+              parttime = as.numeric(cc06_v2030 == 2),
+              unemployed = as.numeric(between(as.numeric(cc06_v2030), 3, 4)),
+              presentunion = as.numeric(cc06_v2082 == 1),
+              pastunion = as.numeric(cc06_v2082 == 2),
+              rep_partyid = as.numeric(cc06_v3005),
+              con_ideology = as.numeric(ideo5),
+              church_attend = if_else(churatd == 5, NA_integer_, as.integer(5-churatd)),
+              south = as.numeric(cc06_v1006  == 3))
+
 
 # African-American population pecentage by zip code from ACS
 acs_black_pop <- acs::acs.fetch(endyear = 2011, 
