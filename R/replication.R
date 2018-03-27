@@ -38,13 +38,6 @@ acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
 # of pre-election Profile Survey in Aug 2006, so we want zip_pre from cces_common_cumulative.dta file.
 # Postscript: It turns out that zip_post is all missing for 2006 in cces_common_cumulative.dta anyway.
 
-cces_combo <- read_dta("data/cces/cces_cumulative_0612/cces_common_cumulative_4.dta") %>%
-  filter(year == 2007) %>%
-  transmute(v1000 = caseid,
-            zipcode = as.numeric(zip_pre)) %>%
-  left_join(acs_s1901, by = "zipcode")
-
-
 cces07 <- read_dta("data/cces/cces2007/cces07_output.dta", encoding = "latin1") %>% # haven says .sav has 'invalid byte sequence', so first converted to .dta with StatTransfer
     transmute(zipcode = as.numeric(inputzip),
               state_abb = as.character(cc06_v1002),
