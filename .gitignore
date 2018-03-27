@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+# data/results06.rda too big for GitHub
+data/results06.rda
