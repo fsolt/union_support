@@ -263,7 +263,7 @@ load("data/results06.rda")
 
 p <- #t2_res %>% by_2sd(hhn06x) %>%
     #rbind(t2_all_res %>% by_2sd(hhn)) %>% 
-    m06_res %>% by_2sd(cces_merged_mi[[1]]) %>% 
+    m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>% 
     dwplot() +
     # relabel_y_axis(vars_proper) +
     theme_bw() + xlab("Coefficient Estimate") +
