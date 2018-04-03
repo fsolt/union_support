@@ -4,6 +4,7 @@ library(mi)
 library(mitools)
 library(lme4)
 library(interplot)
+library(dotwhisker)
 library(tidyverse)
 
 
@@ -261,9 +262,12 @@ save(m06, m06_res, file = "data/results06.rda")
 
 load("data/results06.rda")
 
+load("data/cces07_merged_mi.rda")
+load("data/results07.rda")
+
 p <- #t2_res %>% by_2sd(hhn06x) %>%
     #rbind(t2_all_res %>% by_2sd(hhn)) %>% 
-    m06_res %>% by_2sd(cces_merged_mi[[1]]) %>% 
+    m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>% 
     dwplot() +
     # relabel_y_axis(vars_proper) +
     theme_bw() + xlab("Coefficient Estimate") +
