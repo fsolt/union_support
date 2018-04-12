@@ -192,16 +192,20 @@ cces_merged <- cces06 %>%
          presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
   filter(!is.na(union_influence2)) # exclude individuals with no DV response
 
-vars_list <- c("zipcode", "state_abb",
+vars_list <- c("zipcode", "state_alph",
                "union_influence2", "union_influence3", 
                "below25k", "above100k", 
-               "median_income", "unemployed", "blackpct_zip", "perc_bush04", "pop_density", "percent_members",
-               "edu", "income", "age", "male", "black", "hispanic", "asian", "other", "parttime", "unemployed",
-               "presentunion", "pastunion", "partyid", "con_ideology", "church_attend", "south")
+               "median_income_zip", "unemployment_rate_zip", "blackpct_zip", "pop_density_zip",
+               "fips", "bush04_county",
+               "union_st",
+                "educ", "income", "age", "male", "black", "hispanic", "asian", "other", "parttime", "unemployed",
+               "presentunion", "pastunion", "rep_partyid", "con_ideology", "church_attend", "south")
 vars_proper <- c("Zipcode", "State", 
                  "Union Influence 1", "Union Influence 2", 
                  "Below 25k", "Above 100k", 
-                 "Median Income", "Unemployment Rate", "% Black", "% Republican Vote", "Population Density", "% Unionized Workers", 
+                 "Median Income", "Unemployment Rate", "% Black", "Population Density", 
+                 "FIPS", "% Republican Vote",
+                 "% Unionized Workers", 
                  "Education", "Income", "Age", "Male", "Black", "Hispanic", "Asian", "Other", "Employed Part-Time", "Unemployed",
                  "Current Union Member", "Past Union Member", "Party ID", "Ideology", "Religiosity", "South")
 
@@ -265,10 +269,15 @@ load("data/results06.rda")
 load("data/cces07_merged_mi.rda")
 load("data/results07.rda")
 
-p <- m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>% 
+level_brackets <- list(c("Zip", "Below 25k", "Population Density"),
+                       c("State", "% Unionized Workers", "% Unionized Workers"),
+                       c("County", "% Republican Vote","% Republican Vote"),
+                       c("Individual", "Education", "South"))
+
+p <- {m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>% 
     rbind(m07_all_res %>% by_2sd(cces07_merged_mi[[1]][[1]])) %>% 
-    dwplot() +
-    # relabel_y_axis(vars_proper) +
+    dwplot() %>% 
+  relabel_predictors(setNames(vars_proper, vars_list)) +
     theme_bw() + xlab("Coefficient Estimate") +
     geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
     theme(legend.justification=c(0, 1), legend.position=c(0, 1),
@@ -276,15 +285,14 @@ p <- m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>%
           legend.title.align = .5,
           legend.text = element_text(size = 9),
           legend.key.height = unit(12, "pt")) # +
-    # scale_colour_grey(start = .7, end = .5,
-    #                   name = "Data",
-    #                   breaks = c("t2", "t2_all"),
-    #                   labels = c("Pew 2006", "Pew 2005-2009"))
-# g <- p %>% add_brackets(level_brackets)
-# dir.create("figures", showWarnings = FALSE)
-# ggsave("figures/t2_pooled.pdf", plot = g, width = 6, height = 5) 
+     scale_colour_grey(start = .7, end = .5,
+                       name = "Data",
+                       breaks = c("t2", "t2_all"),
+                       labels = c("Pew 2006", "Pew 2005-2009"))} %>% 
+add_brackets(level_brackets)
 
-
+dir.create("figures", showWarnings = FALSE)
+ggsave("figures/t2_pooled.pdf", plot = p, width = 6, height = 5) 
 
 m06_inter_below25k <- interplot(m06, "below25k", "above100k") +
     labs(x = "Above $100K", 
@@ -307,4 +315,3 @@ m06_inter_above100k <- interplot(m06, "above100k", "below25k") +
     scale_colour_grey(start = .5)
 
 ggsave(filename="paper/figures/m06_inter_above100k.pdf", plot = m06_inter_above100k, width = 7, height = 7)
-
