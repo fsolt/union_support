@@ -192,23 +192,6 @@ cces_merged <- cces06 %>%
          presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
   filter(!is.na(union_influence2)) # exclude individuals with no DV response
 
-vars_list <- c("zipcode", "state_alph",
-               "union_influence2", "union_influence3", 
-               "below25k", "above100k", 
-               "median_income_zip", "unemployment_rate_zip", "blackpct_zip", "pop_density_zip",
-               "fips", "bush04_county",
-               "union_st",
-                "educ", "income", "age", "male", "black", "hispanic", "asian", "other", "parttime", "unemployed",
-               "presentunion", "pastunion", "rep_partyid", "con_ideology", "church_attend", "south")
-vars_proper <- c("Zipcode", "State", 
-                 "Union Influence 1", "Union Influence 2", 
-                 "Below 25k", "Above 100k", 
-                 "Median Income", "Unemployment Rate", "% Black", "Population Density", 
-                 "FIPS", "% Republican Vote",
-                 "% Unionized Workers", 
-                 "Education", "Income", "Age", "Male", "Black", "Hispanic", "Asian", "Other", "Employed Part-Time", "Unemployed",
-                 "Current Union Member", "Past Union Member", "Party ID", "Ideology", "Religiosity", "South")
-
 hhn_mi <- function(df, seed=324) {
   # multiply impute missing data
   mdf <- missing_data.frame(as.data.frame(df))
@@ -264,10 +247,26 @@ m06_res <- format_mi_results(m06)
 
 save(m06, m06_res, file = "data/results06.rda")
 
+### Load results and plot
+load("data/cces_merged_mi.rda")
 load("data/results06.rda")
 
 load("data/cces07_merged_mi.rda")
 load("data/results07.rda")
+
+vars_list <- c("below25k", "above100k", "below25k:above100k",
+               "median_income_zip", "unemployment_rate_zip", "blackpct_zip", "pop_density_zip",
+               "bush04_county",
+               "union_st",
+               "educ", "income", "age", "male", "black", "hispanic", "asian", "other", "parttime", "unemployed",
+               "presentunion", "pastunion", "rep_partyid", "con_ideology", "church_attend", "south")
+
+vars_proper <- c("Below $25k", "Above $100k", "Below $25k x Above $100k",
+                 "Median Income", "Unemployment Rate", "% Black", "Population Density", 
+                 "% Republican Vote",
+                 "% Unionized Workers", 
+                 "Education", "Income", "Age", "Male", "Black", "Hispanic", "Asian", "Other", "Employed Part-Time", "Unemployed",
+                 "Current Union Member", "Past Union Member", "Republican Party ID", "Conservative Ideology", "Church Attendance", "South")
 
 level_brackets <- list(c("Zip", "Below 25k", "Population Density"),
                        c("State", "% Unionized Workers", "% Unionized Workers"),
@@ -284,11 +283,11 @@ p <- {m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>%
           legend.background = element_rect(colour="grey80"),
           legend.title.align = .5,
           legend.text = element_text(size = 9),
-          legend.key.height = unit(12, "pt")) # +
+          legend.key.height = unit(12, "pt")) +
      scale_colour_grey(start = .7, end = .5,
                        name = "Data",
-                       breaks = c("t2", "t2_all"),
-                       labels = c("Pew 2006", "Pew 2005-2009"))} %>% 
+                       breaks = c("m06", "m1_all"),
+                       labels = c("CCES 2006", "CCES 2007"))} %>% 
 add_brackets(level_brackets)
 
 dir.create("figures", showWarnings = FALSE)
