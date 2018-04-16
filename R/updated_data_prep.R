@@ -262,36 +262,35 @@ vars_list <- c("below25k", "above100k", "below25k:above100k",
                "presentunion", "pastunion", "rep_partyid", "con_ideology", "church_attend", "south")
 
 vars_proper <- c("Below $25k", "Above $100k", "Below $25k x Above $100k",
-                 "Median Income", "Unemployment Rate", "% Black", "Population Density", 
-                 "% Republican Vote",
-                 "% Unionized Workers", 
+                 "Median Income, Zip", "Unemployment Rate, Zip", "% Black, Zip", "Population Density, Zip", 
+                 "% Republican Vote, County",
+                 "% Unionized Workers, State", 
                  "Education", "Income", "Age", "Male", "Black", "Hispanic", "Asian", "Other", "Employed Part-Time", "Unemployed",
                  "Current Union Member", "Past Union Member", "Republican Party ID", "Conservative Ideology", "Church Attendance", "South")
 
-level_brackets <- list(c("Zip", "Below 25k", "Population Density"),
-                       c("State", "% Unionized Workers", "% Unionized Workers"),
-                       c("County", "% Republican Vote","% Republican Vote"),
-                       c("Individual", "Education", "South"))
+level_brackets <- list(c("Local Inequality", "Below $25k", "Below $25k x Above $100k"),
+                       c("Contextual Controls", "Median Income, Zip", "% Unionized Workers, State"),
+                       c("Individual Controls", "Education", "South"))
 
 p <- {m06_res %>% by_2sd(cces_merged_mi[[1]][[1]]) %>% 
-    rbind(m07_all_res %>% by_2sd(cces07_merged_mi[[1]][[1]])) %>% 
+    rbind(m07_res %>% by_2sd(cces07_merged_mi[[1]][[1]])) %>% 
     dwplot() %>% 
   relabel_predictors(setNames(vars_proper, vars_list)) +
     theme_bw() + xlab("Coefficient Estimate") +
     geom_vline(xintercept = 0, colour = "grey60", linetype = 2) +
-    theme(legend.justification=c(0, 1), legend.position=c(0, 1),
+    theme(legend.justification=c(0, 1), legend.position=c(0.01, .995),
           legend.background = element_rect(colour="grey80"),
           legend.title.align = .5,
           legend.text = element_text(size = 9),
           legend.key.height = unit(12, "pt")) +
      scale_colour_grey(start = .7, end = .5,
                        name = "Data",
-                       breaks = c("m06", "m1_all"),
-                       labels = c("CCES 2006", "CCES 2007"))} %>% 
+                       breaks = c("m07", "m06"),
+                       labels = c("CCES 2007", "CCES 2006"))} %>% 
 add_brackets(level_brackets)
 
-dir.create("figures", showWarnings = FALSE)
-ggsave("figures/t2_pooled.pdf", plot = p, width = 6, height = 5) 
+dir.create("paper/figures", showWarnings = FALSE)
+ggsave("paper/figures/t1_comparison.pdf", plot = p, width = 7, height = 9) 
 
 m06_inter_below25k <- interplot(m06, "below25k", "above100k") +
     labs(x = "Above $100K", 
