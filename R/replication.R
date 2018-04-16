@@ -61,7 +61,7 @@ cces07 <- read_dta("data/cces/cces2007/cces07_output.dta", encoding = "latin1") 
               south = as.numeric(cc06_v1006  == 3))
 
 
-# African-American population pecentage by zip code from ACS
+# African-American population percentage by zip code from ACS
 acs_black_pop <- acs::acs.fetch(endyear = 2011, 
                                 geography = acs::geo.make(zip.code = "*"),
                                 variable = c("C02003_004"),
