@@ -1,6 +1,3 @@
-library(interplot)
-library(dotwhisker)
-library(tidyverse)
 library(haven)
 library(jsonlite)
 library(mi)
@@ -8,6 +5,9 @@ library(mitools)
 library(lme4)
 library(acs)
 library(janitor)
+library(interplot)
+library(dotwhisker)
+library(tidyverse)
 
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
@@ -276,7 +276,7 @@ load("data/cces07_merged_mi.rda")
 
 m07 <- with(cces07_merged_mi,
            glmer(union_influence2~below25k*above100k+
-                   median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+union_st+
+                   median_income_zip+unemployment_rate_zip+blackpct_zip+pop_density_zip+bush04_county+union_st+
                    educ+income+age+male+black+hispanic+asian+other+parttime+unemployed+presentunion+pastunion+
                    rep_partyid+con_ideology+church_attend+south+
                    (1|fips), family=binomial(link="logit")))
