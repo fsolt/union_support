@@ -29,7 +29,14 @@ acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                                   `Households; Margin of Error; $150,000 to $199,999`^2 +
                                   `Households; Margin of Error; $200,000 or more`^2))
 
+acs_b19083 <- acs::acs.fetch(endyear = 2011, 
+                                geography = acs::geo.make(zip.code = "*"),
+                                table.number = "B19083",
+                                key = "")
 
+acs_gini <- acs_b19083@geography %>% 
+    transmute(zipcode = as.numeric(zipcodetabulationarea),
+              gini = as.numeric(acs_b19083@estimate))
 
 # latest version of cces_06_common.dta lacks zip codes (noted in codebook as question for Polimetrix), but includes
 # caseid as v1000.  cces_common_cumulative_4.dta has caseids and zips for pre- and post-election surveys,
@@ -171,26 +178,27 @@ unemployment_rate <- read_csv("data/ACS_11_5YR_S2301.csv",
 
 # Merge contextual variables
 cces_merged <- cces06 %>% 
-  filter(!is.na(zipcode)) %>% 
-  left_join(acs_s1901, by = "zipcode") %>% 
-  left_join(blackpct, by = "zipcode") %>% 
-  left_join(bls, by = "state_abb") %>%
-  left_join(acs_zip_area, by = "zipcode") %>% 
-  left_join(zip_fips, by = "zipcode") %>% 
-  left_join(bush04_cnty, by = "fips") %>%
-  left_join(median_income, by = "zipcode") %>%
-  left_join(unemployment_rate, by = "zipcode") %>%
-  mutate(pop_density_zip = pop_total/area,
-         state_alph = as.numeric(as.factor(state_abb))) %>% # by postcode, not name
-  select(zipcode, state_alph,
-         union_influence2, union_influence3, 
-         below25k, above100k, 
-         median_income_zip, unemployment_rate_zip, blackpct_zip, pop_density_zip,
-         fips, bush04_county,
-         union_st,
-         educ, income, age, male, black, hispanic, asian, other, parttime, unemployed,
-         presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
-  filter(!is.na(union_influence2)) # exclude individuals with no DV response
+    filter(!is.na(zipcode)) %>% 
+    left_join(acs_s1901, by = "zipcode") %>% 
+    left_join(acs_gini, by = "zipcode") %>%  
+    left_join(blackpct, by = "zipcode") %>% 
+    left_join(bls, by = "state_abb") %>%
+    left_join(acs_zip_area, by = "zipcode") %>% 
+    left_join(zip_fips, by = "zipcode") %>% 
+    left_join(bush04_cnty, by = "fips") %>%
+    left_join(median_income, by = "zipcode") %>%
+    left_join(unemployment_rate, by = "zipcode") %>%
+    mutate(pop_density_zip = pop_total/area,
+           state_alph = as.numeric(as.factor(state_abb))) %>% # by postcode, not name
+    select(zipcode, state_alph,
+           union_influence2, union_influence3, 
+           below25k, above100k, 
+           median_income_zip, unemployment_rate_zip, blackpct_zip, pop_density_zip,
+           fips, bush04_county,
+           union_st,
+           educ, income, age, male, black, hispanic, asian, other, parttime, unemployed,
+           presentunion, pastunion, rep_partyid, con_ideology, church_attend, south) %>% 
+    filter(!is.na(union_influence2)) # exclude individuals with no DV response
 
 hhn_mi <- function(df, seed=324) {
   # multiply impute missing data
