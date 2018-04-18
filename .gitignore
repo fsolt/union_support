@@ -10,3 +10,5 @@ data/pew_hhn
 lit
 notes.txt
 union_support.Rproj
+paper/cache
+paper/union_support.tex
