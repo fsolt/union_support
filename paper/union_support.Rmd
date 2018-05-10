@@ -37,6 +37,7 @@ library(tidyverse)
 
 ## Introduction
 
+A critical question at the center of research of economic inequality is whether or not individuals are conscious of rising levels of inequality within their local contexts, and, if so, what is the impact of this consciousness? While rationalist theory argues that rising inequality has the potential to create increased demands for economic distribution (Meltzer and Richard 1981), others argue that increasingly economically disadvantaged populations are less likely to embrace collective identify or action (Gaventa 1980).  A recent study by Newman and Kane (2018) suggests
 
 ```{datasetup, echo=FALSE}
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
