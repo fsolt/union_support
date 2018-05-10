@@ -13,7 +13,7 @@ author:
   affiliation: University of Iowa
 - name: Rachel Torres
   affiliation: University of Iowa 
-abstract: "Do local contexts that have higher levels of income inequality generate more backlash and so more support for labor unions?  A recent study, @Newman2017, contends that living in a context with visible income inequality generate greater support for the expansion of union power through the perception of the increased of need for unions as credible advocates for the working class. We find that their conclusions are not supported by their results, and that their results are dependent on the usage of less comprehensive data from one specific year of the CCES. We then demonstrate that the using a more representative survey from the previous year renders their results null. We are unable to find evidence that an individual’s bimodal inequality context influences their support for unions. There is no evidence that visible inequality influences union support of individuals."
+abstract: "Do local contexts that have higher levels of income inequality generate more backlash and so more support for labor unions?  A recent study, @Newman2017, contends that living in a context with visible income inequality generate greater support for the expansion of union power through the perception of the increased of need for unions as credible advocates for the working class. We find that their conclusions are not supported by their results, and that their results are dependent on the usage of less comprehensive data from one specific year of the CCES. We then demonstrate that the using a more representative survey from the previous year renders their results null. There is no evidence that an individual’s bimodal inequality context influences their support for unions. There is no evidence that visible inequality influences union support of individuals."
 # keywords: "income inequality, labor, union, context"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 11pt
@@ -23,9 +23,6 @@ biblio-style: apsr
 citecolor: black
 endnote: no
 ---
-
-@Newman2017
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(haven)
@@ -38,13 +35,10 @@ library(dotwhisker)
 library(tidyverse)
 ```
 
-## R Markdown
+## Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{datasetup}
+```{datasetup, echo=FALSE}
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
                       col_types = cols(.default = col_double(),
@@ -184,7 +178,7 @@ You can also embed plots, for example:
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-```{generating missing, converting zip to fips, and grabbing IVs}
+```{generating missing, converting zip to fips, and grabbing IVs, echo=FALSE}
 missing <- bush04_cnty %>%  # election results still without fips due to county name inconsistencies
   filter(is.na(fips)) %>% 
   rename(orig_county = county) %>% 
@@ -222,7 +216,7 @@ unemployment_rate <- read_csv("data/ACS_11_5YR_S2301.csv",
             unemployment_rate_zip = HC04_EST_VC01) 
 ```
 
-```{merging contextual variables}
+```{merging contextual variables, echo=FALSE}
 # Merge contextual variables
 cces_merged <- cces06 %>% 
     filter(!is.na(zipcode)) %>% 
@@ -248,7 +242,7 @@ cces_merged <- cces06 %>%
     filter(!is.na(union_influence2)) # exclude individuals with no DV response
 ```
 
-```{multiply impute missing data}
+```{multiply impute missing data, echo=FALSE}
 hhn_mi <- function(df, seed=324) {
   # multiply impute missing data
   mdf <- missing_data.frame(as.data.frame(df))
@@ -265,7 +259,7 @@ hhn_mi <- function(df, seed=324) {
 }
 ```
 
-```{format results}
+```{format results, echo=FALSE}
 # this right here, we'll have to come back to
 format_mi_results <- function(m) {
   # format results of analysis of multiply imputed dataset
@@ -291,7 +285,7 @@ save(cces_merged_mi, "data/cces_merged_mi.rda")
 load("data/cces_merged_mi.rda")
 ```
 
-```{this line estimates the model on each of those 10 datasets and combine the results taking into account our uncertainty of the missing values of our data}
+```{this line estimates the model on each of those 10 datasets and combine the results taking into account our uncertainty of the missing values of our data, echo=FALSE, echo=FALSE}
 
 #Union_Influence2
 m06 <- with(cces_merged_mi,
@@ -306,7 +300,7 @@ m06_res <- format_mi_results(m06)
 save(m06, m06_res, file = "data/results06.rda")
 ```
 
-```{Load results and plot}
+```{Load results and plot, echo=FALSE}
 load("data/cces_merged_mi.rda")
 load("data/results06.rda")
 
