@@ -13,7 +13,7 @@ author:
   affiliation: University of Iowa
 - name: Rachel Torres
   affiliation: University of Iowa 
-abstract: "Do local contexts that have higher levels of income inequality generate more backlash and so more support for labor unions?  A recent study, @Newman2017, contends that living in a context with visible income inequality generate greater support for the expansion of union power through the perception of the increased of need for unions as credible advocates for the working class. We find that their conclusions are not supported by their results, and that their results are dependent on the usage of less comprehensive data from one specific year of the CCES. We then demonstrate that the using a more representative survey from the previous year renders their results null. There is no evidence that an individual’s bimodal inequality context influences their support for unions. There is no evidence that visible inequality influences union support of individuals."
+abstract: "Do local contexts that have higher levels of income inequality generate more backlash and so more support for labor unions?  A recent study, @Newman2017, contends that living in a context with visible income inequality generate greater support for the expansion of union power through the perception of the increased of need for unions as credible advocates for the working class. We find that their conclusions are not supported by their results, and that their results are dependent on the usage of less comprehensive data from one specific year of the CCES. We then demonstrate that the using a more representative survey from the previous year renders their results null. There is no evidence that contexts of greater bimodal inequality influence individuals' support for unions."
 # keywords: "income inequality, labor, union, context"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 11pt
@@ -36,7 +36,7 @@ library(tidyverse)
 ```
 ## Introduction
 
-  A critical question at the center of research of economic inequality is whether or not individuals are conscious of rising levels of inequality within their local contexts, and, if so, what is the impact of this consciousness? Traditionally, rationalist theory has argued that rising inequality has the potential to create increased demands for economic distribution and policy output by the public (Lipset 1960, Meltzer and Richard 1981). However, the literature provides room for skepticism. Public dissatisfaction with inequality is not associated with increased support for progressive tax reform or spending for the poor (McCall 2013). Additionally, scholars have instead found that increasingly economically disadvantaged populations are less likely to embrace collective identify or action, and that rising inequality in the United States has actually lowered demand for redistribution along with decreased public support (Gaventa 1980, Kelly and Enns 2010, Johnston and Newman 2016). Does increased inequality have the potential to instigate public backlash, and under what conditions?A recent study by Newman and Kane (2018) suggests residing in a context with visible income inequality generates increased union support by augmenting the perceived need for union advocacy on behalf of the working class.
+  A critical question at the center of research of economic inequality is whether or not individuals are conscious of rising levels of inequality within their local contexts, and, if so, what is the impact of this consciousness? Traditionally, rationalist theory has argued that rising inequality has the potential to create increased demands for economic distribution and policy output by the public (Lipset 1960, Meltzer and Richard 1981). However, the literature provides room for skepticism. Public dissatisfaction with inequality is not associated with increased support for progressive tax reform or spending for the poor (McCall 2013). Additionally, scholars have instead found that increasingly economically disadvantaged populations are less likely to embrace collective identify or action, and that rising inequality in the United States has actually lowered demand for redistribution along with decreased public support (Gaventa 1980, Kelly and Enns 2010, Johnston and Newman 2016). Does increased inequality have the potential to instigate public backlash, and under what conditions?  A recent study by Newman and Kane (2018) suggests residing in a context with visible income inequality generates increased union support by augmenting the perceived need for union advocacy on behalf of the working class.
 ```{datasetup, echo=FALSE}
 acs_s1901 <- read_csv("data/ACS_11_5YR_S1901/ACS_11_5YR_S1901.csv",
                       skip = 1,
@@ -208,8 +208,10 @@ unemployment_rate <- read_csv("data/ACS_11_5YR_S2301.csv",
   transmute(zipcode = as.numeric(GEO.id2),
             unemployment_rate_zip = HC04_EST_VC01) 
 ```
+
 ## Data and Methods
 To test their hypothesis, they analysis the 2007 CCES’s Common Content (2007 CCES), an Internet-based survey that contains around 10,000 adult U.S. citizens. They argue that the utilization of the 2007 survey specifically is related to not only the relatively large sample size but the fact it contains a survey question that taps attitudes towards labor unions, while also containing relevant control variables. The 2007 CCES also contains the individual respondent’s zip code of residence, which allowed for straightforward matching with US Census Bureau contextual data. However, this same question appears on the 2006 CCES’s Common Content (2006 CCES), with an even larger sample size of over 36,000 respondents. Additionally, the data collection process with the CCES varies by the given year, with even years (such as the 2006 CCES) consisting of both a pre and post-election wave, and odd years (such as the 2007 CCES) consisting of only a single post-election wave. Given the field norm of utilizing the largest and most comprehensive data set to test the application of the theory, one could question the validity of the conclusions presented in their study (King, Keohane, and Verba 1994).
+
 ```{merging contextual variables, echo=FALSE}
 # Merge contextual variables
 cces_merged <- cces06 %>% 
@@ -252,7 +254,9 @@ hhn_mi <- function(df, seed=324) {
   imputationList(mdf_mi_list)
 }
 ```
+
 In Figure 1 (t1_comparison), we’ve displayed the results as a dot-and-whisker plot, with the dots indicating the estimated change in the logged odds of the dependent variable for a change of two standard deviations in the independent variable and the whiskers representing the 95% confidence intervals of these estimates (Kastellec and Leoni 2007, Solt and Hu 2015). Within this plot, the upper, darker lines depict the results obtained using the CCES 2007, as done in Newman and Kane (2018), while the lower, lighter lines are those obtained using the CCES 2006. Across both models; age, unemployment status, union membership (past and present), conservatism, and religiosity retain their statistical significance and overall direction, with minor differences in magnitude of effect. However, key variables begin to diverge and seem to tell a different story in regard to the key relationship being examined. The effect of whether the race of the respondent is Black or Other, while significant in the CCES 2007 model, appears insignificant in the CCES 2006. Additionally, identifying as a Republican in the Newman and Kane’s (2018) model suggested a decreased likelihood of supporting union power expansion. In the CCES 2006 model, the relationship is the reverse, suggesting that being a Republican increased the likelihood of supporting increased union power. The most important discrepancy of all, however, is the main variable of interest, bi-modal inequality. The interaction between the percentage of households earning below $25,000 per year and the percentage of households earning above $100,000 per year within the respondent’s zip code is not significant in the CCES 2006 model, suggesting that there is no relationship between local contextual exposure to bi-modal inequality and an individual’s support for the expansion of union power.
+
 ```{format results, echo=FALSE}
 # this right here, we'll have to come back to
 format_mi_results <- function(m) {
@@ -280,6 +284,7 @@ load("data/cces_merged_mi.rda")
 ```
 ##Conclusion 
 Newman and Kane’s (2018) assertion that the expansion of support for labor unions is created through with low income individuals being exposed to high levels of income inequality is one not to be taken lightly. Rationalist scholars would feel vindicated in their theories regarding the demand for economic inequality reform having the ability to manifest by the sheer nature of exposure to the rising inequality in the United States. Moreover, advocates for strong union support would have direct evidence that the future of union support is directly related to this process. However, the most comprehensive data available does not provide to support for either of these claims.
+
 ```{this line estimates the model on each of those 10 datasets and combine the results taking into account our uncertainty of the missing values of our data, echo=FALSE, echo=FALSE}
 
 #Union_Influence2
